@@ -5,9 +5,10 @@ import ipaddress
 import requests
 import xmltodict
 import os
+import sys
 import ftd_to_json
 from colors import bcolors
-
+from getpass import getpass
 
 # configuration_path = "firepower_config.txt"
 configuration_path = "nszu_ftd_config.txt"
@@ -16,9 +17,34 @@ template_path = "ttp_test_v5.txt"
 
 ftd_to_json.convert(template_path, configuration_path)
 
-fmc_ip = ''
-fmc_user = ''
-fmc_password = ''
+if os.path.exists('fmc_creds.json'):
+    print('Credential file, fmc_creds.json found!')
+    with open('fmc_creds.json') as fmc_creads:
+        login_data = json.load(fmc_creads)
+    fmc_ip = login_data.get('fmc_ip')
+    fmc_user = login_data.get('fmc_user')
+    fmc_password = login_data.get('fmc_password')
+    if not fmc_ip or not fmc_user or not fmc_password:
+        sys.exit('File fmc_creds.json not contain required credentials or IP data, please delete the file and rerun '
+                 'program')
+else:
+    while True:
+        fmc_ip = input('Please provide FMC IP address: ')
+        try:
+            fmc_ip_address = ipaddress.ip_address(fmc_ip)
+            if fmc_ip_address:
+                break
+        except ValueError:
+            print(bcolors.FAIL + 'ERROR: Wrong IP address format or host ip provided' + bcolors.ENDC)
+            continue
+    fmc_user = input('Please provide FMC API capable username: ')
+    fmc_password = getpass('Please provide FMC API capable user password: ')
+
+    fmc_creds_dict = {'fmc_ip': fmc_ip, 'fmc_user': fmc_user, 'fmc_password': fmc_password}
+    fmc_creds_json = json.dumps(fmc_creds_dict, indent=4)
+    with open('fmc_creds.json', 'w') as creds_file:
+        creds_file.write(fmc_creds_json)
+
 
 fmc = fireREST.FMC(fmc_ip, fmc_user, fmc_password)
 print(f'Connected to FMC IP {fmc_ip}')
