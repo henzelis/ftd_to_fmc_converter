@@ -4,11 +4,6 @@ import os
 import json
 from colors import bcolors
 
-# configuration_path = "D:\Python\play_with_something\ASA_converter\/firepower_config.txt"
-configuration_path = "D:\Python\play_with_something\ASA_converter\/nszu_ftd_config.txt"
-# configuration_path = "D:\Python\play_with_something\ASA_converter\/2110_run.txt"
-template_path = "D:\Python\play_with_something\ASA_converter\/ttp_test_v5.txt"
-
 
 def convert(template_path: str, configuration_path: str):
     template_exist = os.path.exists(template_path)

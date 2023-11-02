@@ -8,11 +8,11 @@ import os
 import ftd_to_json
 from colors import bcolors
 
-# configuration_path = "D:\Google_Drive\Alesta\KODA\ASA-5505_SH_RUNN.txt"
-# configuration_path = "D:\Python\play_with_something\ASA_converter\/firepower_config.txt"
-configuration_path = "D:\Python\play_with_something\ASA_converter\/nszu_ftd_config.txt"
-# configuration_path = "D:\Python\play_with_something\ASA_converter\/2110_run.txt"
-template_path = "D:\Python\play_with_something\ASA_converter\/ttp_test_v5.txt"
+
+# configuration_path = "firepower_config.txt"
+configuration_path = "nszu_ftd_config.txt"
+# configuration_path = "2110_run.txt"
+template_path = "ttp_test_v5.txt"
 
 ftd_to_json.convert(template_path, configuration_path)
 
