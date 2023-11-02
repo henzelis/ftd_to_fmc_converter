@@ -10,9 +10,7 @@ import ftd_to_json
 from colors import bcolors
 from getpass import getpass
 
-# configuration_path = "firepower_config.txt"
-configuration_path = "nszu_ftd_config.txt"
-# configuration_path = "2110_run.txt"
+configuration_path = "firepower_config.txt"
 template_path = "ttp_test_v5.txt"
 
 ftd_to_json.convert(template_path, configuration_path)
