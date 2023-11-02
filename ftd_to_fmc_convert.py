@@ -11,7 +11,7 @@ from colors import bcolors
 from getpass import getpass
 
 configuration_path = "firepower_config.txt"
-template_path = "ttp_test_v5.txt"
+template_path = "ttp_v5.txt"
 
 ftd_to_json.convert(template_path, configuration_path)
 
