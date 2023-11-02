@@ -30,11 +30,8 @@ hostname {{ hostname | re(".+") }}
 <group name="{{ object_type }}-objects.{{ object_name }}**">
 object {{ object_type }} {{ object_name | _start_ }}
  description {{ description | re(".*") }}
-## protocol tcp source eq smtp
  protocol {{protocol}} {{direction | re("DIRECTION"}} eq {{port}}
-## service tcp source eq 993
  service {{protocol | re("SVC_PORTS") }} {{direction}} eq {{port}}
-## service tcp destination range 8802 8827
  service {{protocol | re("SVC_PORTS") }} {{direction}} range {{port | re("RANGE_NUMBERS") | resub(' ', '-')}}
  protocol {{protocol | re("SVC_PORTS") }} source eq {{port}}
  protocol {{protocol | re("SVC_PORTS") }} source range {{port_begin}} {{port_end}}
@@ -58,48 +55,13 @@ object {{ object_type }} {{ object_name | _start_ }}
 
 <group name="object-nat.{{ object_name }}**">
 object {{ object_type }} {{ object_name | _start_ }}
-## nat (IF-Management-vlan,IF-Out-Datagroup) dynamic IP_80.91.181.76
  nat ({{src_intf }},{{ dst_intf }}) {{ nat_type | re("NAT_TYPES") }} {{translated_network }}
 </group>
 
 
 <group name="source-nat">
-## nat (IF-Inter-Link,IF-Out-Datagroup) source dynamic max_ip2_192.168.101.117 IP_80.91.181.77
 nat ({{src_intf}},{{dst_intf}}) source {{ nat_mode | re("NAT_TYPES") }} {{ src_original }} {{src_modified }}
-## nat (IF-Test,IF-Out-Datagroup) source static Obj-NET-TEST99 Obj-NET-TEST99 destination static Obj-NET-VPN_nat_pool40 Obj-NET-VPN_nat_pool40 no-proxy-arp route-lookup description Geoportal
 nat ({{src_intf}},{{dst_intf}}) source {{ nat_mode | re("NAT_TYPES") }} {{ src_original }} {{src_modified }} destination {{ dst_mode }} {{ dst_original }} {{ dst_modified }} no-proxy-arp route-lookup description {{ description }}
-## nat (IF-DMZ-Doc,IF-Out-Datagroup) source static Obj-NET-DMZ-Doc-LAN31 Obj-NET-DMZ-Doc-LAN31 destination static Obj-NET-VPN_nat_pool40 Obj-NET-VPN_nat_pool40 no-proxy-arp route-lookup description Geoportal
-## nat (IF-DMZ,IF-Out-Datagroup) source static Obj-NET-DMZ-LAN30 Obj-NET-DMZ-LAN30 destination static Obj-NET-VPN_nat_pool40 Obj-NET-VPN_nat_pool40 no-proxy-arp route-lookup description Geoportal
-## nat (IF-Management-vlan,IF-Out-Datagroup) source static Obj-NET-Mgmt10 Obj-NET-Mgmt10 destination static Obj-NET-VPN_nat_pool40 Obj-NET-VPN_nat_pool40 no-proxy-arp route-lookup description Geoportal
-## nat (IF-Inter-Link,IF-Out-Datagroup) source static IPv4-Private-192.168.0.0-16 IPv4-Private-192.168.0.0-16 destination static Obj-NET-VPN_nat_pool40 Obj-NET-VPN_nat_pool40 no-proxy-arp description Geoportal
-## nat (IF-Inter-Link,IF-Out-Datagroup) source static Obj-gfukoda IP_93.183.196.114 protocol SVC_8589946411 SVC_8589946411
-## nat (IF-Management-vlan,IF-Out-Datagroup) source static FMC FMC destination static SSU-INT SSU-INT
-## nat (IF-Inside,IF-Out-Datagroup) source static FMC FMC destination static SSU-INT SSU-INT
-## nat (IF-DMZ,IF-Out-Datagroup) source static FMC FMC destination static SSU-INT SSU-INT
-## nat (IF-DMZ-Doc,IF-Out-Datagroup) source static FMC FMC destination static SSU-INT SSU-INT
-## nat (IF-DMZ-VPN,IF-Out-Datagroup) source static FMC FMC destination static SSU-INT SSU-INT
-## nat (IF-Koda-Lan,IF-Out-Datagroup) source static FMC FMC destination static SSU-INT SSU-INT
-## nat (IF-Test,IF-Out-Datagroup) source static FMC FMC destination static SSU-INT SSU-INT
-## nat (IF-Inter-Link,IF-Out-Datagroup) source static Obj-gfukoda IP_93.183.196.114 protocol SVC_8589946414 SVC_8589946414
-## nat (IF-Inter-Link,IF-Out-Datagroup) source static Obj-gfukoda IP_93.183.196.114 protocol SVC_8589946412 SVC_8589946412
-## nat (IF-Inter-Link,IF-Out-Datagroup) source static Obj-gfukoda IP_93.183.196.114 protocol SVC_8589946471 SVC_8589946471
-## nat (IF-Inter-Link,IF-Out-Datagroup) source static Obj-gfukoda IP_93.183.196.114 protocol SVC_8589946413 SVC_8589946413
-## nat (IF-Inter-Link,IF-Out-Datagroup) source static Obj-gfukoda IP_93.183.196.114 protocol SVC_8589946452 SVC_8589946452
-## nat (IF-Inter-Link,IF-Out-Datagroup) source static Obj-gfukoda IP_93.183.196.114 protocol SVC_8589946433 SVC_8589946433
-## nat (IF-Inter-Link,IF-Out-Datagroup) source static Obj-geoportal1 IP_93.183.196.115 protocol SVC_8589946526 SVC_8589946526 description Geoportal
-## nat (IF-Inter-Link,IF-Out-Datagroup) source static Obj-geoportal1 IP_93.183.196.115 protocol SVC_8589946580 SVC_8589946580 description Geoportal
-## nat (IF-Inter-Link,IF-Out-Datagroup) source static Obj-geoportal1 IP_93.183.196.115 protocol SVC_8589946581 SVC_8589946581 description Geoportal
-## nat (IF-Inter-Link,IF-Out-Datagroup) source static Obj-geoportal1 IP_93.183.196.115 protocol SVC_8589946582 SVC_8589946582 description Geoportal
-## nat (IF-Inter-Link,IF-Out-Datagroup) source static Obj-geoportal1 IP_93.183.196.115 protocol SVC_8589946601 SVC_8589946601 description Geoportal
-## nat (IF-Inter-Link,IF-Out-Datagroup) source static Obj-geoportal2 IP_93.183.196.115 protocol SVC_8589946693 SVC_8589946693 description Geoportal
-## nat (IF-Inter-Link,IF-Out-Datagroup) source static Obj-geoportal2 IP_93.183.196.115 protocol SVC_8589946736 SVC_8589946736 description Geoportal
-## nat (IF-Inter-Link,IF-Out-Datagroup) source static Obj-geoportal2 IP_93.183.196.115 protocol SVC_8589946755 SVC_8589946755 description Geoportal
-## nat (IF-Inter-Link,IF-Out-Datagroup) source static Obj-geoportal2 IP_93.183.196.115 protocol SVC_8589946756 SVC_8589946756 description Geoportal
-## nat (IF-Inter-Link,IF-Out-Datagroup) source static Obj-geoportal3 IP_93.183.196.115 protocol SVC_8589946775 SVC_8589946775 description Geoportal
-## nat (IF-Inter-Link,IF-Out-Datagroup) source static Obj-geoportal3 IP_93.183.196.115 protocol SVC_8589946794 SVC_8589946794 description Geoportal
-## nat (IF-Inter-Link,IF-Out-Datagroup) source static Obj-geoportal3 IP_93.183.196.115 protocol SVC_8589946813 SVC_8589946813 description Geoportal
-## nat (IF-Inter-Link,IF-Out-Datagroup) source static Obj-geoportal3 IP_93.183.196.115 protocol SVC_8589946832 SVC_8589946832 description Geoportal
-
 </group>
 
 </group>
