@@ -4,7 +4,6 @@ import os
 import json
 from colors import bcolors
 
-# configuration_path = "D:\Google_Drive\Alesta\KODA\ASA-5505_SH_RUNN.txt"
 # configuration_path = "D:\Python\play_with_something\ASA_converter\/firepower_config.txt"
 configuration_path = "D:\Python\play_with_something\ASA_converter\/nszu_ftd_config.txt"
 # configuration_path = "D:\Python\play_with_something\ASA_converter\/2110_run.txt"
