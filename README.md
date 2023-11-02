@@ -2,6 +2,7 @@
 Orphan FTD configuration to FMC converting tool.
 
 If your FMC is died some day and you have only FTD without any management this tool may be yours last hope instrument to recover configuration and put it back to new FMC.
+
 What is supported for now:
  - Network object migration;
  - Service objects migration;
