@@ -306,8 +306,6 @@ access-list CSM_FW_ACL_ advanced {{action | re("ACL_ACTION")}} {{protocol | re("
 access-list CSM_FW_ACL_ advanced {{action | re("ACL_ACTION")}} {{protocol | re("ACL_SVC")}} {{sourceNetworks | re("ACL_ANY")}} ifc {{destinationZones}} object {{destinationNetworks}} eq {{destinationPorts}} rule-id {{rule-id}}
 
 
-
-
 ## ACL With Logging options
 access-list CSM_FW_ACL_ advanced {{action | re("ACL_ACTION")}} {{protocol | re("ACL_SVC")}} {{sourceNetworks | re("ACL_ANY")}} ifc {{destinationZones}} object {{destinationNetworks}} eq {{destinationPorts}} rule-id {{rule-id}} event-log {{ logtype | re(".*") }}
 access-list CSM_FW_ACL_ advanced {{action | re("ACL_ACTION")}} {{protocol | re("ACL_SVC")}} {{sourceNetworks | re("ACL_ANY")}} ifc {{destinationZones}} host {{destinationNetworks}} rule-id {{rule-id}} event-log {{ logtype | re(".*") }}
