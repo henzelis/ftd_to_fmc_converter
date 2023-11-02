@@ -14,6 +14,9 @@ configuration_path = "firepower_config.txt"
 template_path = "ttp_v5.txt"
 
 ftd_to_json.convert(template_path, configuration_path)
+action = "create_all"
+# action = "delete_all"
+
 
 if os.path.exists('fmc_creds.json'):
     print('Credential file, fmc_creds.json found!')
@@ -42,7 +45,6 @@ else:
     fmc_creds_json = json.dumps(fmc_creds_dict, indent=4)
     with open('fmc_creds.json', 'w') as creds_file:
         creds_file.write(fmc_creds_json)
-
 
 fmc = fireREST.FMC(fmc_ip, fmc_user, fmc_password)
 print(f'Connected to FMC IP {fmc_ip}')
@@ -989,8 +991,6 @@ intf_data = {
     'name': 'GigabitEthernet0/0'
 }
 
-
-
 intf_data = {
     'type': 'SubInterface',
     'securityZone': {
@@ -1015,8 +1015,6 @@ intf_data = {
 # device.delete_interfaces(interface='VLAN300')
 # print(interfaces)
 
-# action = "create_all"
-action = "delete_all"
 
 if action == "create_all":
     do("create_host_objects")
