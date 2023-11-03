@@ -13,10 +13,8 @@ What is supported for now:
 Limitation:
 FTD LINA configuration not containing SNORT rule information and information related to SNORT engine will not be recovered.
 
-## TODO:
-NAT parsing should be added in the future releases
-
 To make it work you need to do next steps:
+
 1) Connect using SSH to yours orphan FTD with was under the FMC management;
 2) Enter LINA CLI using 'system support diagnostic-cli' command;
 3) Switch to enabled mode by entering 'enable' command;
@@ -26,5 +24,12 @@ To make it work you need to do next steps:
 7) Run script ftd_to_fmc_convert.py or if you are using Windows just run 'run_converter.cmd';
 First run of the script should be done on the PC with Internet access to download port and protocol binding information from IANA site. After the first run files will be cached and reused by next run.
 On a new FMC you need to create user with API privileges and input this credentials during the software execution.
+
+
+## TODO:
+ - NAT configuration recovery
+ - Interface configuration recovery
+
+
 
 
