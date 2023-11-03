@@ -1,9 +1,10 @@
-# Orphane FTD to FMC recovery tool 
+# Cisco FTD to FMC recovery tool 
 Orphan FTD configuration to FMC converting tool.
 
 If your FMC is died some day and you have only FTD without any management this tool may be yours last hope instrument to recover configuration and put it back to new FMC.
 
 What is supported for now:
+ - Security zone migration;
  - Network object migration;
  - Service objects migration;
  - Access rules and Policies migration;
