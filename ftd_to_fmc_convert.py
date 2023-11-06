@@ -570,6 +570,8 @@ def do(do_func):
                     # ############################# COLLECTION LOGGING ACTION ##################################
                     if logging_present:
                         logging_type = el.get('logtype')
+                        if logging_type:
+                            logging_type = logging_type.strip()
                         logging_flow_dict = {
                             'flow-end': 'logEnd',
                             'flow-start': 'logBegin'
