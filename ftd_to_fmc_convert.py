@@ -10,13 +10,23 @@ import ftd_to_json
 from colors import bcolors
 from getpass import getpass
 
-configuration_path = "firepower_config.txt"
-template_path = "ttp_v5.txt"
-
-ftd_to_json.convert(template_path, configuration_path)
 action = "create_all"
 # action = "delete_all"
+update_config_parse = False
+# update_protocol_map = False
+# update_port_map = False
 
+if os.path.exists('result.json') and not update_config_parse:
+    print('Found result.json!')
+    with open('result.json') as file:
+        data = json.load(file)
+else:
+    print('No result.json, parsing initial config from firepower_config.txt...')
+    configuration_path = "firepower_config.txt"
+    template_path = "ttp_v6.txt"
+    ftd_to_json.convert(template_path, configuration_path)
+    with open('result.json') as file:
+        data = json.load(file)
 
 if os.path.exists('fmc_creds.json'):
     print('Credential file, fmc_creds.json found!')
@@ -49,9 +59,6 @@ else:
 fmc = fireREST.FMC(fmc_ip, fmc_user, fmc_password)
 print(f'Connected to FMC IP {fmc_ip}')
 
-with open('result.json') as file:
-    data = json.load(file)
-
 # fmc.policy.accesspolicy.accessrule.get(container_name='ACP')
 # fmc.policy.accesspolicy.accessrule.get(container_name='ACP', name='Portrange')
 # acp_create_data = {'name': 'acp_test', 'description': 'ACP Test', 'defaultAction': {'action': 'BLOCK'}}
@@ -71,73 +78,73 @@ rule_action_dict = {
 }
 
 icmp_type_dict = {
-    'echo-reply': '0',
-    'unreachable': '3',
-    'source-quench': '4',
-    'redirect': '5',
-    'alternate-address': '6',
-    'echo': '8',
-    'router-advertisement': '9',
-    'router-solicitation': '10',
-    'time-exceeded': '11',
-    'parameter-problem': '12',
-    'timestamp-request': '13',
-    'timestamp-reply': '14',
-    'information-request': '15',
-    'information-reply': '16',
-    'mask-request': '17',
-    'mask-reply': '18',
-    'traceroute': '30',
-    'conversion-error': '31',
-    'mobile-redirect': '32',
+    "echo-reply": "0",
+    "unreachable": "3",
+    "source-quench": "4",
+    "redirect": "5",
+    "alternate-address": "6",
+    "echo": "8",
+    "router-advertisement": "9",
+    "router-solicitation": "10",
+    "time-exceeded": "11",
+    "parameter-problem": "12",
+    "timestamp-request": "13",
+    "timestamp-reply": "14",
+    "information-request": "15",
+    "information-reply": "16",
+    "mask-request": "17",
+    "mask-reply": "18",
+    "traceroute": "30",
+    "conversion-error": "31",
+    "mobile-redirect": "32"
 }
 
 
-def get_port_map():
-    if os.path.exists('port-map.xml'):
-        print('port-map.xml exists, using it.')
-        with open('port-map.xml') as portmapdata:
-            data_dict = xmltodict.parse(portmapdata.read())
-    else:
-        print('NO port-map.xml file, creating it...')
-        iana_data = requests.get(
-            url='https://www.iana.org/assignments/service-names-port-numbers/service-names-port-numbers.xml')
-        with open('port-map.xml', 'wb') as f:
-            f.write(iana_data.content)
-        data_dict = xmltodict.parse(iana_data.text)
-    port_map = {}
-    for i in data_dict['registry']['record']:
-        # print(f"Name: {i.get('name')}, Protocol: {i.get('protocol')}, Number: {i.get('number')}")
-        try:
-            number = i['number']
-            if number == "None":
-                continue
-            port_map[i.get('name')] = i.get('number')
-        except Exception as e:
-            # print(e)
-            pass
-    return port_map
+# def get_port_map():
+#     if os.path.exists('port-map.xml'):
+#         print('port-map.xml exists, using it.')
+#         with open('port-map.xml') as portmapdata:
+#             data_dict = xmltodict.parse(portmapdata.read())
+#     else:
+#         print('No port-map.xml file, creating it...')
+#         iana_data = requests.get(
+#             url='https://www.iana.org/assignments/service-names-port-numbers/service-names-port-numbers.xml')
+#         with open('port-map.xml', 'wb') as f:
+#             f.write(iana_data.content)
+#         data_dict = xmltodict.parse(iana_data.text)
+#     port_map = {}
+#     for i in data_dict['registry']['record']:
+#         # print(f"Name: {i.get('name')}, Protocol: {i.get('protocol')}, Number: {i.get('number')}")
+#         try:
+#             number = i['number']
+#             if number == "None":
+#                 continue
+#             port_map[i.get('name')] = i.get('number')
+#         except Exception as e:
+#             # print(e)
+#             pass
+#     return port_map
 
 
-def get_protocol_map():
-    if os.path.exists('protocol-map.xml'):
-        print('protocol-map.xml exists, using it.')
-        with open('protocol-map.xml') as protocol_data:
-            data_dict = xmltodict.parse(protocol_data.read())
-    else:
-        print('No protocol-map.xml file, creating ...')
-        iana_data = requests.get(
-            url='https://www.iana.org/assignments/protocol-numbers/protocol-numbers.xml'
-        )
-        with open('protocol-map.xml', 'wb') as f:
-            f.write(iana_data.content)
-        data_dict = xmltodict.parse(iana_data.text)
-    protocol_map = {}
-    for i in data_dict['registry']['registry']['record']:
-        # print(i)
-        if i.get('name'):
-            protocol_map[i.get('name').lower()] = i.get('value')
-    return protocol_map
+# def get_protocol_map():
+#     if os.path.exists('protocol-map.xml'):
+#         print('protocol-map.xml exists, using it.')
+#         with open('protocol-map.xml') as protocol_data:
+#             data_dict = xmltodict.parse(protocol_data.read())
+#     else:
+#         print('No protocol-map.xml file, creating it ...')
+#         iana_data = requests.get(
+#             url='https://www.iana.org/assignments/protocol-numbers/protocol-numbers.xml'
+#         )
+#         with open('protocol-map.xml', 'wb') as f:
+#             f.write(iana_data.content)
+#         data_dict = xmltodict.parse(iana_data.text)
+#     protocol_map = {}
+#     for i in data_dict['registry']['registry']['record']:
+#         # print(i)
+#         if i.get('name'):
+#             protocol_map[i.get('name').lower()] = i.get('value')
+#     return protocol_map
 
 
 def is_range(range_data: str):
@@ -314,8 +321,33 @@ def nat_rules(action: str, nat_policy_name: str, source_data=None):
         return None
 
 
-port_map = get_port_map()
-protocol_map = get_protocol_map()
+# if os.path.exists('port-map.json') and not update_port_map:
+#     print('port-map.json found!')
+#     with open('port-map.json') as port_map_file:
+#         port_map = json.load(port_map_file)
+# else:
+#     print('No port-map.json, building...')
+#     port_map = get_port_map()
+#     port_map_json = json.dumps(port_map, indent=4)
+#     with open('port-map.json', 'w') as port_map_file:
+#         port_map_file.write(port_map_json)
+#
+# if os.path.exists('protocol-map.json') and not update_protocol_map:
+#     print('protocol-map.json found!')
+#     with open('protocol-map.json') as protocol_map_file:
+#         protocol_map = json.load(protocol_map_file)
+# else:
+#     print('No protocol-map.json, building...')
+#     protocol_map = get_protocol_map()
+#     protocol_map_json = json.dumps(protocol_map, indent=4)
+#     with open('protocol-map.json', 'w') as protocol_map_file:
+#         protocol_map_file.write(protocol_map_json)
+
+with open('asa_port_literals.json') as f:
+    port_map = json.load(f)
+
+with open('asa_protocol_literals.json') as f:
+    protocol_map = json.load(f)
 
 
 def do(do_func):
@@ -330,7 +362,7 @@ def do(do_func):
                 print(bcolors.WARNING + str(e) + bcolors.ENDC)
                 continue
             if not obj_port_number.isdigit() and not is_range(obj_port_number):
-                obj_port_number = port_map[obj_port_number.replace('imap4', 'imaps')]
+                obj_port_number = port_map[obj_port_number]
             fmc_object = FMCobject(port_name=obj_port_name, port_number=obj_port_number, protocol=obj_protocol)
             try:
                 fmc_object.create_port_object()
@@ -465,8 +497,7 @@ def do(do_func):
                 try:
                     policy_name = el['policy_name']
                     policy_list.append(policy_name)
-                except Exception as e:
-                    # print(e)
+                except Exception:
                     pass
         policy_set = set(policy_list)
         policy_list_clean = list(policy_set)
@@ -486,8 +517,7 @@ def do(do_func):
                 try:
                     policy_name = el['policy_name']
                     policy_list.append(policy_name)
-                except Exception as e:
-                    # print(e)
+                except Exception:
                     pass
         policy_set = set(policy_list)
         policy_list_clean = list(policy_set)
@@ -502,9 +532,9 @@ def do(do_func):
     if do_func == "create_access_rules":
         typical_protocol_list = ['icmp', 'ip', 'tcp', 'udp']
         for obj in data['access-lists']:
-            if obj:  # == '268450819':
+            if obj:  # == '268442690':
                 obj_list = data['access-lists'][obj]
-                policy_obj = {"type": "AccessRule", "enabled": True}  # , "sendEventsToFMC": True, 'logBegin': True}
+                policy_obj = {"type": "AccessRule", "enabled": True}
                 logging_present = is_present('logtype', obj_list)
                 source_zones_present = is_present('sourceZones', obj_list)
                 source_networks_present = is_present('sourceNetworks', obj_list)
@@ -549,7 +579,6 @@ def do(do_func):
                             if not dst_port_is_duplicate:
                                 dst_port_dict = {'type': 'ICMPv4PortLiteral', 'protocol': '1', 'icmpType': 'Any'}
                                 destination_ports['destinationPorts']['literals'].append(dst_port_dict)
-                                policy_obj.update(destination_ports)
                         else:
                             try:
                                 src_protocol = el["protocol"]
@@ -566,6 +595,21 @@ def do(do_func):
                                     policy_obj.update(source_protocols)
                             except Exception:
                                 pass
+                        protocol = el.get('protocol')
+                        if protocol and protocol != 'icmp':
+                            protocol_number = protocol_map.get(protocol)
+                            if protocol:
+                                protocol_is_duplicate = False
+                                try:
+                                    for i in destination_ports.get('destinationPorts')['literals']:
+                                        if i.get('protocol') == protocol_number:
+                                            protocol_is_duplicate = True
+                                except Exception:
+                                    pass
+                                if not protocol_is_duplicate:
+                                    dst_port_dict = {'type': 'PortLiteral', 'protocol': protocol_number}
+                                    destination_ports_lit["literals"].append(dst_port_dict)
+                                    destination_ports['destinationPorts'].update(destination_ports_lit)
                 for el in data['access-lists'][obj]:
                     # ############################# COLLECTION LOGGING ACTION ##################################
                     if logging_present:
@@ -590,7 +634,6 @@ def do(do_func):
                         if protocol.isdigit():
                             pass
                         else:
-                            protocol = protocol.replace('ipinip', 'ipip')
                             protocol = protocol_map[protocol]
                         dst_port_is_duplicate = False
                         destination_ports_exist = destination_ports.get('destinationPorts').get('literals')
@@ -604,8 +647,8 @@ def do(do_func):
                             destination_ports['destinationPorts'].update(destination_ports_lit)
                     if protocol and protocol == 'icmp':
                         destination_port = el.get("destinationPorts")
-                        icmp_type = icmp_type_dict.get(destination_port)
                         if destination_port:
+                            icmp_type = icmp_type_dict.get(destination_port)
                             dst_port_is_duplicate = False
                             destination_ports_exist = destination_ports.get('destinationPorts').get('literals')
                             if destination_ports_exist:
@@ -630,17 +673,30 @@ def do(do_func):
                                     else:
                                         destination_ports_lit["literals"].append(dst_port_dict)
                                         destination_ports['destinationPorts'].update(destination_ports_lit)
+                            else:
+                                dst_port_is_duplicate = False
+                                try:
+                                    for port in destination_ports['destinationPorts']['literals']:
+                                        if port.get('type') == 'ICMPv4PortLiteral':
+                                            dst_port_is_duplicate = True
+                                except Exception:
+                                    pass
+                                if not dst_port_is_duplicate:
+                                    dst_port_dict = {'type': 'ICMPv4PortLiteral', 'protocol': '1', 'icmpType': 'Any'}
+                                    destination_ports_lit['literals'].append(dst_port_dict)
+                                    destination_ports['destinationPorts'].update(destination_ports_lit)
                     if source_ports_present:
                         try:
                             source_port = el["sourcePorts"]
+                            word_range = el.get('WordRange')
                             if not source_port.isdigit() and not is_range(
-                                    source_port) and source_port not in port_map.keys():
+                                    source_port) and source_port not in port_map.keys() and not word_range:
                                 src_port_is_duplicate = False
                                 try:
                                     for port in source_ports.get('sourcePorts')['objects']:
                                         if port.get('name') == source_port:
                                             src_port_is_duplicate = True
-                                except Exception as e:
+                                except Exception:
                                     pass
                                 if not src_port_is_duplicate:
                                     src_port_dict = {}
@@ -651,17 +707,26 @@ def do(do_func):
                                     src_port_dict["type"] = port_data["type"]
                                     source_ports_obj["objects"].append(src_port_dict)
                                     source_ports['sourcePorts'].update(source_ports_obj)
-                                    # policy_obj.update(source_ports)
-                                    # print(policy_obj)
                             else:
                                 src_port_is_duplicate = False
-                                if source_port.isdigit():
+                                if source_port.isdigit() or is_range(source_port):
+                                    pass
+                                elif word_range:
+                                    low_port, high_port = source_port.split('-')
+                                    digit_low_port = port_map.get(low_port)
+                                    digit_high_port = port_map.get(high_port)
+                                    source_port = digit_low_port + '-' + digit_high_port
                                     pass
                                 else:
                                     source_port = port_map[source_port]
                                 try:
-                                    for port in source_ports.get('sourcePorts')['literals']:
-                                        if port.get('port') == source_port:
+                                    cur_protocol = protocol_map[el["protocol"]]
+                                    port_chksum = str(cur_protocol) + str(source_port)
+                                    for element in source_ports.get('sourcePorts')['literals']:
+                                        port_num = element.get('port')
+                                        protocol_num = element.get('protocol')
+                                        element_chksum = str(protocol_num) + str(port_num)
+                                        if port_chksum == element_chksum:
                                             src_port_is_duplicate = True
                                 except Exception as e:
                                     pass
@@ -672,24 +737,22 @@ def do(do_func):
                                     src_port_dict["port"] = source_port
                                     source_ports_lit["literals"].append(src_port_dict)
                                     source_ports['sourcePorts'].update(source_ports_lit)
-                                    # policy_obj.update(source_ports)
-                                    # print(policy_obj)
-                        except Exception as e:
-                            # print(e)
+                        except Exception:
                             pass
                     # ############################# COLLECTING DESTINATION PORTS ####################################
                     if destination_ports_present:
-                        if protocol != 'icmp':
+                        if protocol != 'icmp' and protocol is not None:
                             try:
-                                destination_port = el["destinationPorts"]
+                                destination_port = el['destinationPorts']
+                                word_range = el.get('WordRange')
                                 if not destination_port.isdigit() and not is_range(
-                                        destination_port) and destination_port not in port_map.keys():
+                                        destination_port) and destination_port not in port_map.keys() and not word_range:
                                     dst_port_is_duplicate = False
                                     try:
                                         for port in destination_ports.get('destinationPorts')['objects']:
                                             if port.get('name') == destination_port:
                                                 dst_port_is_duplicate = True
-                                    except Exception as e:
+                                    except Exception:
                                         pass
                                     if not dst_port_is_duplicate:
                                         dst_port_dict = {}
@@ -700,17 +763,26 @@ def do(do_func):
                                         dst_port_dict["type"] = port_data["type"]
                                         destination_ports_obj["objects"].append(dst_port_dict)
                                         destination_ports['destinationPorts'].update(destination_ports_obj)
-                                        # policy_obj.update(destination_ports)
-                                        # print(policy_obj)
                                 else:
                                     dst_port_is_duplicate = False
-                                    if destination_port.isdigit():
+                                    if destination_port.isdigit() or is_range(destination_port):
+                                        pass
+                                    elif word_range:
+                                        low_port, high_port = destination_port.split('-')
+                                        digit_low_port = port_map.get(low_port)
+                                        digit_high_port = port_map.get(high_port)
+                                        destination_port = digit_low_port + '-' + digit_high_port
                                         pass
                                     else:
                                         destination_port = port_map[destination_port]
                                     try:
-                                        for port in destination_ports.get('destinationPorts')['literals']:
-                                            if port.get('port') == destination_port:
+                                        cur_protocol = protocol_map[el["protocol"]]
+                                        port_chksum = str(cur_protocol) + str(destination_port)
+                                        for element in destination_ports.get('destinationPorts')['literals']:
+                                            port_num = element.get('port')
+                                            protocol_num = element.get('protocol')
+                                            element_chksum = str(protocol_num) + str(port_num)
+                                            if port_chksum == element_chksum:
                                                 dst_port_is_duplicate = True
                                     except Exception as e:
                                         pass
@@ -721,10 +793,7 @@ def do(do_func):
                                         dst_port_dict["port"] = destination_port
                                         destination_ports_lit["literals"].append(dst_port_dict)
                                         destination_ports['destinationPorts'].update(destination_ports_lit)
-                                        # policy_obj.update(destination_ports)
-                                        # print(policy_obj)
-                            except Exception as e:
-                                # print(e)
+                            except Exception:
                                 pass
                     # ############################ Check for Source Zones ############################
                     if source_zones_present:
@@ -780,7 +849,6 @@ def do(do_func):
                         try:
                             source_net = el["sourceNetworks"]
                             if "FMC_INLINE" in source_net:
-                                # print(f'Auto Generated Object Reconstruction Started: {source_net}')
                                 source_net_unbox = data["object-groups"]["object-network-groups"][source_net][
                                     'network-objects']
                                 try:
@@ -797,10 +865,8 @@ def do(do_func):
                                                 src_net_data = {'type': 'Network', 'value': ip}
                                             source_networks_lit["literals"].append(src_net_data)
                                             source_networks["sourceNetworks"].update(source_networks_lit)
-                                    # print(source_networks)
-                                except:
+                                except Exception:
                                     pass
-                                    # print('No networks')
                                 try:
                                     src_objects = source_net_unbox['objects']
                                     for objct in src_objects:
@@ -812,16 +878,13 @@ def do(do_func):
                                             try:
                                                 src_net_id = fmc.object.host.get(name=objct)['id']
                                                 src_net_data = {'type': 'Host', 'name': objct, 'id': src_net_id}
-                                            except Exception as exp1:
-                                                # print(f'Exception while looking fo host id: {exp1}')
+                                            except Exception:
                                                 src_net_id = fmc.object.network.get(name=objct)['id']
                                                 src_net_data = {'type': 'Network', 'name': objct, 'id': src_net_id}
                                             source_networks_obj["objects"].append(src_net_data)
                                             source_networks["sourceNetworks"].update(source_networks_obj)
-                                    # print(source_networks)
-                                except:
+                                except Exception:
                                     pass
-                                    # print('No objects')
                             else:
                                 try:
                                     source_network = ipaddress.ip_network(source_net)
@@ -848,20 +911,17 @@ def do(do_func):
                                             src_net_id = fmc.object.host.get(name=source_net)['id']
                                             src_net_data = {'type': 'Host', 'name': source_net, 'id': src_net_id}
                                         except Exception as exp:
-                                            # print(f'Exception while looking fo host id: {exp}')
                                             src_net_id = fmc.object.network.get(name=source_net)['id']
                                             src_net_data = {'type': 'Network', 'name': source_net, 'id': src_net_id}
                                         source_networks_obj["objects"].append(src_net_data)
                                         source_networks["sourceNetworks"].update(source_networks_obj)
-                                    # print(source_networks) ### wrong out point
                         except Exception as e:
                             pass
                     if destination_networks_present:
                         try:
-                            # ############################# COLLECTING DESTINATION NETWORKS ####################################
+                            # ############################# COLLECTING DESTINATION NETWORKS ############################
                             destination_net = el["destinationNetworks"]
                             if "FMC_INLINE" in destination_net:
-                                # print(f'Auto Generated Object Reconstruction Started: {destination_net}')
                                 destination_net_unbox = data["object-groups"]["object-network-groups"][destination_net][
                                     'network-objects']
                                 try:
@@ -878,9 +938,8 @@ def do(do_func):
                                                 src_net_data = {'type': 'Network', 'value': destination_network}
                                             destination_networks_lit["literals"].append(src_net_data)
                                             destination_networks["destinationNetworks"].update(destination_networks_lit)
-                                except:
+                                except Exception:
                                     pass
-                                    # print('No networks')
                                 try:
                                     dst_objects = destination_net_unbox['objects']
                                     for dst_object in dst_objects:
@@ -892,16 +951,13 @@ def do(do_func):
                                             try:
                                                 dst_net_id = fmc.object.network.get(name=dst_object)['id']
                                                 dst_net_data = {'type': 'Network', 'name': dst_object, 'id': dst_net_id}
-                                            except Exception as exp:
-                                                # print(f'Exception while looking fo network id: {exp}')
+                                            except Exception:
                                                 dst_net_id = fmc.object.host.get(name=dst_object)['id']
                                                 dst_net_data = {'type': 'Host', 'name': dst_object, 'id': dst_net_id}
                                             destination_networks_obj["objects"].append(dst_net_data)
                                             destination_networks["destinationNetworks"].update(destination_networks_obj)
-                                    # print(destination_networks) # wrong out point
                                 except:
                                     pass
-                                    # print('No objects')
                             else:
                                 try:
                                     destination_network = ipaddress.ip_network(destination_net)
@@ -917,7 +973,6 @@ def do(do_func):
                                             src_net_data = {'type': 'Network', 'value': destination_network}
                                         destination_networks_lit["literals"].append(src_net_data)
                                         destination_networks["destinationNetworks"].update(destination_networks_lit)
-                                    # print(destination_networks)
                                 except Exception as ValueError:
                                     dst_obj_is_duplicate = False
                                     for i in destination_networks_obj['objects']:
@@ -929,31 +984,53 @@ def do(do_func):
                                             dst_net_data = {'type': 'Network', 'name': destination_net,
                                                             'id': dst_net_id}
                                         except Exception as exp:
-                                            # print(f'Exception while looking fo host id: {exp}')
                                             dst_net_id = fmc.object.host.get(name=destination_net)['id']
                                             dst_net_data = {'type': 'Host', 'name': destination_net, 'id': dst_net_id}
                                         destination_networks_obj["objects"].append(dst_net_data)
                                         destination_networks["destinationNetworks"].update(destination_networks_obj)
-                        except Exception as exp:
-                            # print(exp)
+                        except Exception:
                             pass
                 time.sleep(0.2)
-                # if len(source_zones['sourceZones']['objects']) != 0:
                 if source_ports_present:
                     policy_obj.update(source_ports)
-                if destination_ports_present:
-                    policy_obj.update(destination_ports)
+                policy_obj.update(destination_ports)
                 if source_zones_present:
                     policy_obj.update(source_zones)
-                # if len(destination_zones['destinationZones']['objects']) != 0:
                 if destination_zones_present:
                     policy_obj.update(destination_zones)
-                # if source_networks['sourceNetworks']:
                 if source_networks_present:
                     policy_obj.update(source_networks)
-                # if destination_networks['destinationNetworks']:
                 if destination_networks_present:
                     policy_obj.update(destination_networks)
+                obj_rules_len = len(obj_list) - 2
+                policy_obj_rules_len = 0
+                try:
+                    dst_port_literals = len(policy_obj.get('destinationPorts').get('literals'))
+                    policy_obj_rules_len = policy_obj_rules_len + dst_port_literals
+                except Exception:
+                    pass
+                try:
+                    dst_port_objects = len(policy_obj.get('destinationPorts').get('objects'))
+                    policy_obj_rules_len = policy_obj_rules_len + dst_port_objects
+                except Exception:
+                    pass
+                try:
+                    src_port_literals = len(policy_obj.get('sourcePorts').get('literals'))
+                    policy_obj_rules_len = policy_obj_rules_len + src_port_literals
+                except Exception:
+                    pass
+                try:
+                    src_port_objects = len(policy_obj.get('sourcePorts').get('objects'))
+                    policy_obj_rules_len = policy_obj_rules_len + src_port_objects
+                except Exception:
+                    pass
+                if obj_rules_len == policy_obj_rules_len:
+                    print(
+                        bcolors.OKGREEN + f'OK - Same count config and configured rules: {obj_rules_len}, {policy_obj_rules_len}' + bcolors.ENDC)
+                else:
+                    print(
+                        bcolors.FAIL + f'ACHTUNG!!! SOME RULES ANE NOT PARSED: rules in config: {obj_rules_len},'
+                                       f'rules in policy {policy_obj_rules_len}' + bcolors.ENDC)
                 try:
                     fmc.policy.accesspolicy.accessrule.create(data=policy_obj, container_name=acp_name)
                     print(bcolors.OKGREEN + str(policy_obj) + bcolors.ENDC)
