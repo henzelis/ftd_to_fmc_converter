@@ -11,9 +11,7 @@ from colors import bcolors
 from getpass import getpass
 import colorama
 
-
 colorama.just_fix_windows_console()
-
 
 action = "create_all"
 # action = "delete_all"
@@ -1031,11 +1029,11 @@ def do(do_func):
                     pass
                 if obj_rules_len == policy_obj_rules_len:
                     print(
-                        bcolors.OKGREEN + f'OK - Same count config and configured rules: {obj_rules_len}, {policy_obj_rules_len}' + bcolors.ENDC)
+                        bcolors.OKGREEN + f'OK - Same count of rules in config and API: {obj_rules_len}, {policy_obj_rules_len}' + bcolors.ENDC)
                 else:
                     print(
-                        bcolors.FAIL + f'ACHTUNG!!! SOME RULES ANE NOT PARSED: rules in config: {obj_rules_len},'
-                                       f'rules in policy {policy_obj_rules_len}' + bcolors.ENDC)
+                        bcolors.WARNING + f'Different number of rules in config: {obj_rules_len},'
+                                          f'rules in policy {policy_obj_rules_len}' + bcolors.ENDC)
                 try:
                     fmc.policy.accesspolicy.accessrule.create(data=policy_obj, container_name=acp_name)
                     print(bcolors.OKGREEN + str(policy_obj) + bcolors.ENDC)
@@ -1101,16 +1099,16 @@ intf_data = {
 
 
 if action == "create_all":
-    # do("create_host_objects")
-    # do("create_network_objects")
-    # do("create_group_network_objects")
-    # do("create_port_objects")
-    # do("create_security_zones")
+    do("create_host_objects")
+    do("create_network_objects")
+    do("create_group_network_objects")
+    do("create_port_objects")
+    do("create_security_zones")
     do("create_access_policy")
     do("create_access_rules")
-    # nat_policy = FMCobject(name='Reconstructed NAT')
-    # nat_policy.create_nat_policy()
-    # nat_rules('create_auto_nat', 'Reconstructed NAT', source_data=data)
+    nat_policy = FMCobject(name='Reconstructed NAT')
+    nat_policy.create_nat_policy()
+    nat_rules('create_auto_nat', 'Reconstructed NAT', source_data=data)
 
 if action == "delete_all":
     # Delete All
