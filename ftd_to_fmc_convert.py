@@ -2,13 +2,18 @@ import fireREST
 import json
 import time
 import ipaddress
-import requests
-import xmltodict
+# import requests
+# import xmltodict
 import os
 import sys
 import ftd_to_json
 from colors import bcolors
 from getpass import getpass
+import colorama
+
+
+colorama.just_fix_windows_console()
+
 
 action = "create_all"
 # action = "delete_all"
@@ -1096,16 +1101,16 @@ intf_data = {
 
 
 if action == "create_all":
-    do("create_host_objects")
-    do("create_network_objects")
-    do("create_group_network_objects")
-    do("create_port_objects")
-    do("create_security_zones")
+    # do("create_host_objects")
+    # do("create_network_objects")
+    # do("create_group_network_objects")
+    # do("create_port_objects")
+    # do("create_security_zones")
     do("create_access_policy")
     do("create_access_rules")
-    nat_policy = FMCobject(name='Reconstructed NAT')
-    nat_policy.create_nat_policy()
-    nat_rules('create_auto_nat', 'Reconstructed NAT', source_data=data)
+    # nat_policy = FMCobject(name='Reconstructed NAT')
+    # nat_policy.create_nat_policy()
+    # nat_rules('create_auto_nat', 'Reconstructed NAT', source_data=data)
 
 if action == "delete_all":
     # Delete All
