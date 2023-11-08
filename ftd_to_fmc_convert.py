@@ -14,8 +14,8 @@ colorama.just_fix_windows_console()
 
 action = "create_all"
 # action = "delete_all"
-update_config_parse = False
-debug = True
+update_config_parse = True
+debug = False
 
 if os.path.exists("result.json") and not update_config_parse:
     print("Found result.json!")
@@ -756,7 +756,7 @@ def create_access_rules(data):
     }
     typical_protocol_list = ["icmp", "ip", "tcp", "udp"]
     for obj in tqdm(data["access-lists"]):
-        if obj == '268452903':
+        if obj: # == '268452903':
             obj_list = data["access-lists"][obj]
             policy_obj = {"type": "AccessRule", "enabled": True}
             logging_present = is_present("logtype", obj_list)
@@ -793,7 +793,6 @@ def create_access_rules(data):
             destination_ports_lit = {"literals": []}
             destination_ports_obj = {"objects": []}
             if not source_ports_present and not destination_ports_present:
-                source_protocols = {"sourcePorts": {"literals": []}}
                 for el in data["access-lists"][obj]:
                     protocol = el.get("protocol")
                     if "icmp" in el.values():
@@ -1595,16 +1594,16 @@ intf_data = {
 
 
 if action == "create_all":
-    # create_host_objects(json_data)
-    # create_network_objects(json_data)
-    # create_group_network_objects(json_data)
-    # create_port_objects(json_data)
-    # create_security_zones(json_data)
+    create_host_objects(json_data)
+    create_network_objects(json_data)
+    create_group_network_objects(json_data)
+    create_port_objects(json_data)
+    create_security_zones(json_data)
     create_access_policy(json_data)
     create_access_rules(json_data)
-    # nat_policy = FMCobject(name="Reconstructed NAT")
-    # nat_policy.create_nat_policy()
-    # nat_rules("create_auto_nat", "Reconstructed NAT", source_data=json_data)
+    nat_policy = FMCobject(name="Reconstructed NAT")
+    nat_policy.create_nat_policy()
+    nat_rules("create_auto_nat", "Reconstructed NAT", source_data=json_data)
 
 if action == "delete_all":
     # Delete All
