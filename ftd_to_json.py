@@ -27,5 +27,5 @@ def convert(template_path: str, configuration_path: str):
 
 if __name__ == "__main__":
     configuration_path = "firepower_config.txt"
-    template_path = "ttp_v5.txt"
+    template_path = "ttp_v6.txt"
     convert(template_path, configuration_path)
