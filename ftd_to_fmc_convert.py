@@ -842,7 +842,7 @@ def create_access_rules(data):
                     #             policy_obj.update(source_protocols)
                     #     except Exception:
                     #         pass
-                    if protocol and protocol != "icmp":
+                    if protocol and protocol != "icmp" and protocol and protocol != "ip":
                         protocol_number = protocol_map.get(protocol)
                         if protocol:
                             protocol_is_duplicate = False
