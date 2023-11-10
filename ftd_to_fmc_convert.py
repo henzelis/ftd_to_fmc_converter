@@ -15,7 +15,7 @@ colorama.just_fix_windows_console()
 action = "create_all"
 # action = "delete_all"
 update_config_parse = True
-debug = False
+debug = True
 
 if os.path.exists("result.json") and not update_config_parse:
     print("Found result.json!")
@@ -265,6 +265,12 @@ class FMCobject:
             self.obj_type = e
             pass
         try:
+            self.obj_type = fmc.object.networkgroup.get(name=self.name)["type"]
+            return self.obj_type
+        except Exception as e:
+            self.obj_type = e
+            pass
+        try:
             self.obj_type = fmc.object.securityzone.get(name=self.name)["type"]
             return self.obj_type
         except Exception as e:
@@ -285,6 +291,8 @@ class FMCobject:
             self.obj_id = fmc.object.network.get(name=self.name)["id"]
         elif self.obj_type == "Host":
             self.obj_id = fmc.object.host.get(name=self.name)["id"]
+        elif self.obj_type == "NetworkGroup":
+            self.obj_id = fmc.object.networkgroup.get(name=self.name)["id"]
         elif self.obj_type == "SecurityZone":
             self.obj_id = fmc.object.securityzone.get(name=self.name)["id"]
         if self.obj_id:
@@ -756,7 +764,7 @@ def create_access_rules(data):
     }
     typical_protocol_list = ["icmp", "ip", "tcp", "udp"]
     for obj in tqdm(data["access-lists"]):
-        if obj: # == '268452903':
+        if obj == '268473344':
             obj_list = data["access-lists"][obj]
             policy_obj = {"type": "AccessRule", "enabled": True}
             logging_present = is_present("logtype", obj_list)
@@ -1291,7 +1299,7 @@ def create_access_rules(data):
                                     source_networks["sourceNetworks"].update(
                                         source_networks_lit
                                     )
-                            except ValueError:
+                            except Exception:
                                 src_obj_is_duplicate = False
                                 for so in source_networks_obj["objects"]:
                                     if source_net == so.get("name"):
@@ -1361,34 +1369,32 @@ def create_access_rules(data):
                                 dst_objects = destination_net_unbox["objects"]
                                 for dst_object in dst_objects:
                                     dst_obj_is_duplicate = False
-                                    for do in destination_networks_obj["objects"]:
-                                        if dst_object == do.get("name"):
+                                    for i in destination_networks["destinationNetworks"]["objects"]:
+                                        if dst_object == i.get("name"):
                                             dst_obj_is_duplicate = True
                                     if not dst_obj_is_duplicate:
-                                        try:
-                                            dst_net_id = fmc.object.network.get(
-                                                name=dst_object
-                                            )["id"]
-                                            dst_net_data = {
-                                                "type": "Network",
-                                                "name": dst_object,
-                                                "id": dst_net_id,
-                                            }
-                                        except Exception:
-                                            dst_net_id = fmc.object.host.get(
-                                                name=dst_object
-                                            )["id"]
-                                            dst_net_data = {
-                                                "type": "Host",
-                                                "name": dst_object,
-                                                "id": dst_net_id,
-                                            }
-                                        destination_networks_obj["objects"].append(
-                                            dst_net_data
-                                        )
-                                        destination_networks[
-                                            "destinationNetworks"
-                                        ].update(destination_networks_obj)
+                                        dst_object_orign = FMCobject(name=dst_object)
+                                        dst_net_data_json = dst_object_orign.get_object_json()
+                                        destination_networks["destinationNetworks"]["objects"].append(dst_net_data_json)
+                                        #
+                                        # try:
+                                        #     dst_net_id = fmc.object.network.get(
+                                        #         name=dst_object
+                                        #     )["id"]
+                                        #     dst_net_data = {
+                                        #         "type": "Network",
+                                        #         "name": dst_object,
+                                        #         "id": dst_net_id,
+                                        #     }
+                                        # except Exception:
+                                        #     dst_net_id = fmc.object.host.get(
+                                        #         name=dst_object
+                                        #     )["id"]
+                                        #     dst_net_data = {
+                                        #         "type": "Host",
+                                        #         "name": dst_object,
+                                        #         "id": dst_net_id,
+                                        #     }
                             except Exception:
                                 pass
                         else:
@@ -1398,7 +1404,7 @@ def create_access_rules(data):
                                 )
                                 destination_network = str(destination_network)
                                 dst_net_is_duplicate = False
-                                for dl in destination_networks_lit["literals"]:
+                                for dl in destination_networks_lit.get("literals"):
                                     if destination_network == dl.get("value"):
                                         dst_net_is_duplicate = True
                                 if not dst_net_is_duplicate:
@@ -1418,39 +1424,42 @@ def create_access_rules(data):
                                     destination_networks[
                                         "destinationNetworks"
                                     ].update(destination_networks_lit)
-                            except Exception as ValueError:
+                            except Exception as e:
                                 dst_obj_is_duplicate = False
-                                for i in destination_networks_obj["objects"]:
-                                    if destination_net == i.get("name"):
-                                        dst_obj_is_duplicate = True
-                                if (
-                                        not dst_obj_is_duplicate
-                                        and destination_net != "any"
-                                ):
-                                    try:
-                                        dst_net_id = fmc.object.network.get(
-                                            name=destination_net
-                                        )["id"]
-                                        dst_net_data = {
-                                            "type": "Network",
-                                            "name": destination_net,
-                                            "id": dst_net_id,
-                                        }
-                                    except Exception as exp:
-                                        dst_net_id = fmc.object.host.get(
-                                            name=destination_net
-                                        )["id"]
-                                        dst_net_data = {
-                                            "type": "Host",
-                                            "name": destination_net,
-                                            "id": dst_net_id,
-                                        }
-                                    destination_networks_obj["objects"].append(
-                                        dst_net_data
-                                    )
-                                    destination_networks[
-                                        "destinationNetworks"
-                                    ].update(destination_networks_obj)
+                                destination_objects = destination_networks.get("destinationNetworks").get("objects")
+                                if destination_objects:
+                                    for i in destination_objects:
+                                        if destination_net == i.get("name"):
+                                            dst_obj_is_duplicate = True
+                                if not dst_obj_is_duplicate:
+                                    dst_object_orign = FMCobject(name=destination_net)
+                                    dst_net_data_json = dst_object_orign.get_object_json()
+                                    destination_networks_obj["objects"].append(dst_net_data_json)
+                                    destination_networks["destinationNetworks"].update(destination_networks_obj)
+                                    # try:
+                                    #     dst_net_id = fmc.object.network.get(
+                                    #         name=destination_net
+                                    #     )["id"]
+                                    #     dst_net_data = {
+                                    #         "type": "Network",
+                                    #         "name": destination_net,
+                                    #         "id": dst_net_id,
+                                    #     }
+                                    # except Exception as exp:
+                                    #     dst_net_id = fmc.object.host.get(
+                                    #         name=destination_net
+                                    #     )["id"]
+                                    #     dst_net_data = {
+                                    #         "type": "Host",
+                                    #         "name": destination_net,
+                                    #         "id": dst_net_id,
+                                    #     }
+                                    # destination_networks_obj["objects"].append(
+                                    #     dst_net_data_json
+                                    # )
+                                    # destination_networks[
+                                    #     "destinationNetworks"
+                                    # ].update(destination_networks_obj)
                     except Exception:
                         pass
             time.sleep(0.2)
@@ -1594,16 +1603,16 @@ intf_data = {
 
 
 if action == "create_all":
-    create_host_objects(json_data)
-    create_network_objects(json_data)
-    create_group_network_objects(json_data)
-    create_port_objects(json_data)
-    create_security_zones(json_data)
+    # create_host_objects(json_data)
+    # create_network_objects(json_data)
+    # create_group_network_objects(json_data)
+    # create_port_objects(json_data)
+    # create_security_zones(json_data)
     create_access_policy(json_data)
     create_access_rules(json_data)
-    nat_policy = FMCobject(name="Reconstructed NAT")
-    nat_policy.create_nat_policy()
-    nat_rules("create_auto_nat", "Reconstructed NAT", source_data=json_data)
+    # nat_policy = FMCobject(name="Reconstructed NAT")
+    # nat_policy.create_nat_policy()
+    # nat_rules("create_auto_nat", "Reconstructed NAT", source_data=json_data)
 
 if action == "delete_all":
     # Delete All
