@@ -764,7 +764,7 @@ def create_access_rules(data):
     }
     typical_protocol_list = ["icmp", "ip", "tcp", "udp"]
     for obj in tqdm(data["access-lists"]):
-        if obj == '268473344':
+        if obj:  # == '268473344':
             obj_list = data["access-lists"][obj]
             policy_obj = {"type": "AccessRule", "enabled": True}
             logging_present = is_present("logtype", obj_list)
