@@ -1420,30 +1420,6 @@ def create_access_rules(data):
                                     dst_net_data_json = dst_object_orign.get_object_json()
                                     destination_networks_obj["objects"].append(dst_net_data_json)
                                     destination_networks["destinationNetworks"].update(destination_networks_obj)
-                                    # try:
-                                    #     dst_net_id = fmc.object.network.get(
-                                    #         name=destination_net
-                                    #     )["id"]
-                                    #     dst_net_data = {
-                                    #         "type": "Network",
-                                    #         "name": destination_net,
-                                    #         "id": dst_net_id,
-                                    #     }
-                                    # except Exception as exp:
-                                    #     dst_net_id = fmc.object.host.get(
-                                    #         name=destination_net
-                                    #     )["id"]
-                                    #     dst_net_data = {
-                                    #         "type": "Host",
-                                    #         "name": destination_net,
-                                    #         "id": dst_net_id,
-                                    #     }
-                                    # destination_networks_obj["objects"].append(
-                                    #     dst_net_data_json
-                                    # )
-                                    # destination_networks[
-                                    #     "destinationNetworks"
-                                    # ].update(destination_networks_obj)
                     except Exception:
                         pass
             time.sleep(0.2)
@@ -1558,8 +1534,6 @@ class Device:
         )
         return result
 
-
-intf_data = {"type": "SubInterface", "subIntfId": 300, "name": "GigabitEthernet0/0"}
 
 intf_data = {
     "type": "SubInterface",
