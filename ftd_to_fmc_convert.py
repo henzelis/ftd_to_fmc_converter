@@ -764,7 +764,7 @@ def create_access_rules(data):
     }
     typical_protocol_list = ["icmp", "ip", "tcp", "udp"]
     for obj in tqdm(data["access-lists"]):
-        if obj:  # == '268473344':
+        if obj == '268464129':
             obj_list = data["access-lists"][obj]
             policy_obj = {"type": "AccessRule", "enabled": True}
             logging_present = is_present("logtype", obj_list)
@@ -1603,16 +1603,16 @@ intf_data = {
 
 
 if action == "create_all":
-    # create_host_objects(json_data)
-    # create_network_objects(json_data)
-    # create_group_network_objects(json_data)
-    # create_port_objects(json_data)
-    # create_security_zones(json_data)
+    create_host_objects(json_data)
+    create_network_objects(json_data)
+    create_group_network_objects(json_data)
+    create_port_objects(json_data)
+    create_security_zones(json_data)
     create_access_policy(json_data)
     create_access_rules(json_data)
-    # nat_policy = FMCobject(name="Reconstructed NAT")
-    # nat_policy.create_nat_policy()
-    # nat_rules("create_auto_nat", "Reconstructed NAT", source_data=json_data)
+    nat_policy = FMCobject(name="Reconstructed NAT")
+    nat_policy.create_nat_policy()
+    nat_rules("create_auto_nat", "Reconstructed NAT", source_data=json_data)
 
 if action == "delete_all":
     # Delete All
