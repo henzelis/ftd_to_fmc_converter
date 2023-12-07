@@ -2,6 +2,8 @@
 SVC_PORTS = "tcp-udp|tcp|udp|ip"
 DIRECTION = "source|destination"
 NAT_TYPES = "static|dynamic"
+NAT_STATES = "inactive"
+NAT_PARAMS = "no-proxy-arp"
 RANGE = "range"
 OBJECT = "object"
 OBJECT_EXCLUDE = "[A-Za-z]"
@@ -59,11 +61,21 @@ object {{ object_type }} {{ object_name | _start_ }}
 </group>
 
 
-<group name="source-nat">
-nat ({{src_intf}},{{dst_intf}}) source {{ nat_mode | re("NAT_TYPES") }} {{ src_original }} {{src_modified }}
-nat ({{src_intf}},{{dst_intf}}) source {{ nat_mode | re("NAT_TYPES") }} {{ src_original }} {{src_modified }} destination {{ dst_mode }} {{ dst_original }} {{ dst_modified }} no-proxy-arp route-lookup description {{ description }}
+<group name="source-nat" method="table">
+## nat (WAN,DMZ) source static any any destination static post.mil.gov.ua_Pub post.mil.gov.ua_Priv service SVC_983549828070 SVC_983549828070 inactive
+nat ({{src_intf}},{{dst_intf}}) source {{ src_nat_type | re("NAT_TYPES") }} {{ src_original | re("ACL_ANY")}} {{src_translated | re("ACL_ANY")}} destination {{ dst_nat_type |  re("NAT_TYPES") }} {{ dst_original }} {{ dst_translated }} service {{ original_service }} {{ translated_service }} {{ nat_state | re("NAT_STATES") }}
+## nat (WAN,DMZ) source static cloudflare_proxy cloudflare_proxy destination static rproxy_Pub rproxy.mil.gov.ua service SVC_983549828070 SVC_983549828070
+nat ({{src_intf}},{{dst_intf}}) source {{ src_nat_type | re("NAT_TYPES") }} {{ src_original }} {{src_translated }} destination {{ dst_nat_type |  re("NAT_TYPES") }} {{ dst_original }} {{ dst_translated }} service {{ original_service }} {{ translated_service }} {{ param | re("NAT_PARAMS") | let("nat_state", "active")}}
+## nat (WAN,DMZ) source static access_2244_tcp access_2244_tcp destination static rproxy_Pub rproxy.mil.gov.ua service SVC_820338979765 SVC_820338979765 no-proxy-arp description requested by Mykola Melnyk, A0351
+nat ({{src_intf}},{{dst_intf}}) source {{ src_nat_type | re("NAT_TYPES") }} {{ src_original }} {{src_translated }} destination {{ dst_nat_type |  re("NAT_TYPES") }} {{ dst_original }} {{ dst_translated }} service {{ original_service }} {{ translated_service }} {{ param | re("NAT_PARAMS") }} description {{description | re(".*") | let("nat_state", "active")}}
+nat ({{src_intf}},{{dst_intf}}) source {{ src_nat_type | re("NAT_TYPES") }} {{ src_original }} {{src_translated }} destination {{ dst_nat_type |  re("NAT_TYPES") }} {{ dst_original }} {{ dst_translated }} service {{ original_service }} {{ translated_service | let("nat_state", "active")}}
+nat ({{ remaining_config | _line_ | joinmatches }}
 </group>
 
+<group name="after-auto-nat" method="table">
+## nat (DMZ,WAN) after-auto source dynamic ESET-PROTECT-DMZ ESET_Pub
+nat ({{src_intf}},{{dst_intf}}) after-auto source {{ src_nat_type | re("NAT_TYPES") }} {{ src_original }} {{src_translated }}
+</group>
 </group>
 ## end nat
 

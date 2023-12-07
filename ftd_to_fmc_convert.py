@@ -14,7 +14,7 @@ colorama.just_fix_windows_console()
 
 action = "create_all"
 # action = "delete_all"
-update_config_parse = True
+update_config_parse = False
 debug = True
 
 if os.path.exists("result.json") and not update_config_parse:
@@ -69,6 +69,12 @@ else:
 
 fmc = fireREST.FMC(fmc_ip, fmc_user, fmc_password)
 print(f"Connected to FMC IP {fmc_ip}")
+
+with open("asa_port_literals.json") as f:
+    port_map = json.load(f)
+
+with open("asa_protocol_literals.json") as f:
+    protocol_map = json.load(f)
 
 # fmc.policy.accesspolicy.accessrule.get(container_name='ACP')
 # fmc.policy.accesspolicy.accessrule.get(container_name='ACP', name='Portrange')
@@ -271,6 +277,11 @@ class FMCobject:
             self.obj_type = e
             pass
         try:
+            self.obj_type = fmc.object.port.get(name=self.name)["type"]
+            return self.obj_type
+        except Exception as e:
+            self.obj_type = e
+        try:
             self.obj_type = fmc.object.securityzone.get(name=self.name)["type"]
             return self.obj_type
         except Exception as e:
@@ -293,6 +304,8 @@ class FMCobject:
             self.obj_id = fmc.object.host.get(name=self.name)["id"]
         elif self.obj_type == "NetworkGroup":
             self.obj_id = fmc.object.networkgroup.get(name=self.name)["id"]
+        elif self.obj_type == "ProtocolPortObject":
+            self.obj_id = fmc.object.port.get(name=self.name)["id"]
         elif self.obj_type == "SecurityZone":
             self.obj_id = fmc.object.securityzone.get(name=self.name)["id"]
         if self.obj_id:
@@ -313,70 +326,181 @@ class FMCobject:
         return self.object_template
 
 
-def nat_rules(action: str, nat_policy_name: str, source_data=None):
+def nat_auto_rules(action: str, nat_policy_name: str, source_data=None):
     """
     Create NAT rules
-    :param action: create_auto_nat,
-    :param nat_policy_name: Name of the NAT policy to creaTE
+    :param action: create_auto_nat
+    :param nat_policy_name: Name of the NAT policy to create
     :param source_data: JSON input data
     :return: result
     """
-    if action == "create_auto_nat":
-        print('Creating AutoNat policies...')
-        for obj in tqdm(source_data["nat"]["object-nat"]):
-            try:
-                obj_path = source_data.get("nat").get("object-nat").get(obj)
-                nat_object = {"type": "FTDAutoNatRule"}
-                if "nat_type" in obj_path.keys():
-                    nat_type = obj_path["nat_type"].upper()
-                    nat_object["natType"] = nat_type
-                    origin_network = obj
-                    transl_network = obj_path.get("translated_network")
-                    source_zone = obj_path.get("src_intf")
-                    dst_zone = obj_path.get("dst_intf")
-                    fmc_object_orign = FMCobject(name=origin_network)
-                    origin_network_json = {
-                        "originalNetwork": fmc_object_orign.get_object_json()
+    print('Creating AutoNat policies...')
+    for obj in tqdm(source_data["nat"]["object-nat"]):
+        try:
+            obj_path = source_data.get("nat").get("object-nat").get(obj)
+            nat_object = {"type": "FTDAutoNatRule"}
+            if "nat_type" in obj_path.keys():
+                nat_type = obj_path["nat_type"].upper()
+                nat_object["natType"] = nat_type
+                origin_network = obj
+                transl_network = obj_path.get("translated_network")
+                source_zone = obj_path.get("src_intf")
+                dst_zone = obj_path.get("dst_intf")
+                fmc_object_orign = FMCobject(name=origin_network)
+                origin_network_json = {
+                    "originalNetwork": fmc_object_orign.get_object_json()
+                }
+                nat_object.update(origin_network_json)
+                if transl_network and transl_network != "any":
+                    fmc_object_transl = FMCobject(name=transl_network)
+                    transl_network_json = {
+                        "translatedNetwork": fmc_object_transl.get_object_json()
                     }
-                    nat_object.update(origin_network_json)
-                    if transl_network and transl_network != "any":
-                        fmc_object_transl = FMCobject(name=transl_network)
-                        transl_network_json = {
-                            "translatedNetwork": fmc_object_transl.get_object_json()
-                        }
-                        nat_object.update(transl_network_json)
-                    if source_zone and source_zone != "any":
-                        fmc_object_src_zone = FMCobject(name=source_zone)
-                        src_zone_json = {
-                            "sourceInterface": fmc_object_src_zone.get_object_json()
-                        }
-                        nat_object.update(src_zone_json)
-                    if dst_zone and dst_zone != "any":
-                        fmc_object_dst_zone = FMCobject(name=dst_zone)
-                        dst_zone_json = {
-                            "destinationInterface": fmc_object_dst_zone.get_object_json()
-                        }
-                        nat_object.update(dst_zone_json)
-                    fmc.policy.ftdnatpolicy.autonatrule.create(
-                        container_name=nat_policy_name, data=nat_object
-                    )
-                    if debug:
-                        print(
-                            bcolors.OKGREEN + f"Auto Nat Rule Created {obj}" + bcolors.ENDC
-                        )
-            except Exception as e:
+                    nat_object.update(transl_network_json)
+                if source_zone and source_zone != "any":
+                    fmc_object_src_zone = FMCobject(name=source_zone)
+                    src_zone_json = {
+                        "sourceInterface": fmc_object_src_zone.get_object_json()
+                    }
+                    nat_object.update(src_zone_json)
+                if dst_zone and dst_zone != "any":
+                    fmc_object_dst_zone = FMCobject(name=dst_zone)
+                    dst_zone_json = {
+                        "destinationInterface": fmc_object_dst_zone.get_object_json()
+                    }
+                    nat_object.update(dst_zone_json)
+                fmc.policy.ftdnatpolicy.autonatrule.create(
+                    container_name=nat_policy_name, data=nat_object
+                )
                 if debug:
-                    print(bcolors.WARNING + str(e) + bcolors.ENDC)
-                pass
-    else:
-        return None
+                    print(
+                        bcolors.OKGREEN + f"Auto Nat Rule Created {obj}" + bcolors.ENDC
+                    )
+        except Exception as e:
+            if debug:
+                print(bcolors.WARNING + str(e) + bcolors.ENDC)
+            pass
 
 
-with open("asa_port_literals.json") as f:
-    port_map = json.load(f)
+def create_service_port_object(obj):
+    """
+    Create Service Port Object
+    :param: obj - Service Object Name
+    :return:
+    """
+    try:
+        obj_protocol = json_data["objects"]["service-objects"][obj]["protocol"]
+        obj_port_number = json_data["objects"]["service-objects"][obj]["port"]
+    except Exception as e:
+        if debug:
+            print(bcolors.WARNING + str(e) + bcolors.ENDC)
+    obj_port_name = f"{obj_protocol}_{obj_port_number}"
+    if not obj_port_number.isdigit() and not is_range(obj_port_number):
+        obj_port_number = port_map[obj_port_number]
+    fmc_object = FMCobject(
+        port_name=obj_port_name,
+        port_number=obj_port_number,
+        protocol=obj_protocol,
+    )
+    try:
+        fmc_object.create_port_object()
+    except Exception as e:
+        print(e)
+    return obj_port_name
 
-with open("asa_protocol_literals.json") as f:
-    protocol_map = json.load(f)
+
+def nat_manual_rules(nat_type: str, nat_policy_name: str, source_data=None):
+    """
+    NAT Manual rules actions
+    :param nat_type: "source-nat" or "after-auto-nat"
+    :param nat_policy_name: NAT policy name
+    :param source_data: JSON input data
+    :return: result
+    """
+    print(f'Creating NAT rules for {nat_type}')
+    if nat_type == "after-auto-nat":
+        print("Attention! AFTER AUTO NAT rules will be created as manual NAT because of limitation API")
+    for obj in tqdm(source_data["nat"][nat_type]):
+        try:
+            nat_object = {"type": "FTDManualNatRule"}
+            source_zone = obj.get("src_intf")
+            dst_zone = obj.get("dst_intf")
+            if source_zone and source_zone != "any":
+                fmc_object_src_zone = FMCobject(name=source_zone)
+                src_zone_json = {
+                    "sourceInterface": fmc_object_src_zone.get_object_json()
+                }
+                nat_object.update(src_zone_json)
+            if dst_zone and dst_zone != "any":
+                fmc_object_dst_zone = FMCobject(name=dst_zone)
+                dst_zone_json = {
+                    "destinationInterface": fmc_object_dst_zone.get_object_json()
+                }
+                nat_object.update(dst_zone_json)
+            origin_src = obj.get("src_original")
+            if origin_src:
+                fmc_object_orign_src = FMCobject(name=origin_src)
+                origin_src_json = {
+                    "originalSource": fmc_object_orign_src.get_object_json()
+                }
+                nat_object.update(origin_src_json)
+            translated_src = obj.get("src_translated")
+            if translated_src:
+                fmc_object_translated_src = FMCobject(name=translated_src)
+                translated_src_json = {
+                    "translatedSource": fmc_object_translated_src.get_object_json()
+                }
+                nat_object.update(translated_src_json)
+            origin_dst = obj.get("dst_original")
+            if origin_dst and origin_dst != "any":
+                fmc_object_orign_dst = FMCobject(name=origin_dst)
+                origin_dst_json = {
+                    "originalDestination": fmc_object_orign_dst.get_object_json()
+                }
+                nat_object.update(origin_dst_json)
+            translated_dst = obj.get("dst_translated")
+            if translated_dst and translated_dst != "any":
+                fmc_object_translated_dst = FMCobject(name=translated_dst)
+                translated_dst_json = {
+                    "translatedDestination": fmc_object_translated_dst.get_object_json()
+                }
+                nat_object.update(translated_dst_json)
+            original_service = obj.get("original_service")
+            if original_service:
+                origin_port_object_name = create_service_port_object(original_service)
+                fmc_object_origin_port_object = FMCobject(name=origin_port_object_name)
+                origin_port_object_json = {
+                    "originalDestinationPort": fmc_object_origin_port_object.get_object_json()
+                }
+                nat_object.update(origin_port_object_json)
+            transated_service = obj.get("translated_service")
+            if transated_service:
+                translated_port_object_name = create_service_port_object(transated_service)
+                fmc_object_translated_port_object = FMCobject(name=translated_port_object_name)
+                translated_port_object_json = {
+                    "translatedDestinationPort": fmc_object_translated_port_object.get_object_json()
+                }
+                nat_object.update(translated_port_object_json)
+            description = obj.get("description")
+            if description:
+                nat_object["description"] = description
+            param = obj.get("param")
+            if param == "no-proxy-arp":
+                param_dict = {'noProxyArp': True}
+                nat_object.update(param_dict)
+            nat_type = obj.get("src_nat_type")
+            if nat_type:
+                nat_object["natType"] = nat_type.upper()
+            nat_state = obj.get("nat_state")
+            if nat_state and nat_state == "active":
+                nat_object["enabled"] = "true"
+            if debug:
+                print(nat_object)
+            fmc.policy.ftdnatpolicy.manualnatrule.create(container_name=nat_policy_name, data=nat_object)
+        except Exception as e:
+            if debug:
+                print(e)
+            continue
 
 
 def create_port_objects(data):
@@ -1369,7 +1493,8 @@ def create_access_rules(data):
                                 dst_objects = destination_net_unbox["objects"]
                                 for dst_object in dst_objects:
                                     dst_obj_is_duplicate = False
-                                    destination_network_objects = destination_networks.get("destinationNetworks").get("objects")
+                                    destination_network_objects = destination_networks.get("destinationNetworks").get(
+                                        "objects")
                                     if destination_network_objects:
                                         for i in destination_networks["destinationNetworks"]["objects"]:
                                             if dst_object == i.get("name"):
@@ -1561,6 +1686,7 @@ intf_data = {
 
 
 if action == "create_all":
+    # Create All
     create_host_objects(json_data)
     create_network_objects(json_data)
     create_group_network_objects(json_data)
@@ -1568,9 +1694,11 @@ if action == "create_all":
     create_security_zones(json_data)
     create_access_policy(json_data)
     create_access_rules(json_data)
-    nat_policy = FMCobject(name="Reconstructed NAT")
+    nat_policy = FMCobject(name="RNAT")
     nat_policy.create_nat_policy()
-    nat_rules("create_auto_nat", "Reconstructed NAT", source_data=json_data)
+    nat_auto_rules("create_auto_nat", "RNAT", source_data=json_data)
+    nat_manual_rules(nat_type="source-nat", nat_policy_name="RNAT", source_data=json_data)
+    nat_manual_rules(nat_type="after-auto-nat", nat_policy_name="RNAT", source_data=json_data)
 
 if action == "delete_all":
     # Delete All
@@ -1581,5 +1709,5 @@ if action == "delete_all":
     del_network_objects(json_data)
     del_port_objects(json_data)
     delete_security_zones(json_data)
-    nat_policy = FMCobject(name="Reconstructed NAT")
+    nat_policy = FMCobject(name="RNAT")
     nat_policy.delete_nat_policy()
