@@ -9,6 +9,7 @@ What is supported for now:
  - Service objects migration;
  - Access rules and Policies migration;
  - Object NAT migration;
+ - Manual NAT migration;
 
 Limitation:
 FTD LINA configuration not containing SNORT rule information and information related to SNORT engine will not be recovered.
@@ -27,7 +28,6 @@ On a new FMC you need to create user with API privileges and input this credenti
 
 
 ## TODO:
- - NAT configuration recovery
  - Interface configuration recovery
 
 
