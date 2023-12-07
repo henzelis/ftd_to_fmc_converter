@@ -4,12 +4,12 @@ Orphan FTD configuration to FMC converting tool.
 If your FMC is died some day and you have only FTD without any management this tool may be yours last hope instrument to recover configuration and put it back to new FMC.
 
 What is supported for now:
- - Security zone migration;
- - Network object migration;
- - Service objects migration;
- - Access rules and Policies migration;
- - Object NAT migration;
- - Manual NAT migration;
+ - Security zone recovery;
+ - Network object recovery;
+ - Service objects recovery;
+ - Access rules and Policies recovery;
+ - Object NAT recovery;
+ - Manual NAT recovery;
 
 Limitation:
 FTD LINA configuration not containing SNORT rule information and information related to SNORT engine will not be recovered.
