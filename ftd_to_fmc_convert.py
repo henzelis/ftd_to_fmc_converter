@@ -14,8 +14,8 @@ colorama.just_fix_windows_console()
 
 action = "create_all"
 # action = "delete_all"
-update_config_parse = True
-debug = True
+update_config_parse = False
+debug = False
 
 if os.path.exists("result.json") and not update_config_parse:
     print("Found result.json!")
@@ -892,11 +892,11 @@ def create_access_rules(data):
         "trust": "TRUST",
         "monitor": "MONITOR",
     }
-    typical_protocol_list = ["icmp", "ip", "tcp", "udp"]
-    debug_rule_list_original = ['268464129', '268468229', '268463120', '268463104', '268463122', '268435493', '268442648']
-    debug_rule_list = ['268464129', '268468229', '268463120', '268473346', '268463104', '268463122', '268435493', '268442648']
+    typical_protocol_list = ["icmp", "ip"]
+    # debug_rule_list = ['268464129', '268468229', '268463120', '268473346', '268463104', '268463122', '268435493',
+    # '268442648', '268439590', '268442648', '268456978']
     for obj in tqdm(data["access-lists"]):
-        if obj == '268473346':  # in debug_rule_list:
+        if obj:  # in debug_rule_list:  # == '268468229':
             obj_list = data["access-lists"][obj]
             policy_obj = {"type": "AccessRule", "enabled": True}
             logging_present = is_present("logtype", obj_list)
@@ -955,32 +955,6 @@ def create_access_rules(data):
                             destination_ports["destinationPorts"][
                                 "literals"
                             ].append(dst_port_dict)
-                    # else:
-                    #     try:
-                    #         src_protocol = el["protocol"]
-                    #         src_protocol_is_duplicate = False
-                    #         try:
-                    #             for i in source_protocols.get("sourcePorts")[
-                    #                 "literals"
-                    #             ]:
-                    #                 if (
-                    #                         i.get("protocol")
-                    #                         == protocol_map[src_protocol]
-                    #                 ):
-                    #                     src_protocol_is_duplicate = True
-                    #         except Exception:
-                    #             pass
-                    #         if not src_protocol_is_duplicate:
-                    #             src_protocol_dict = {
-                    #                 "type": "PortLiteral",
-                    #                 "protocol": protocol_map[src_protocol],
-                    #             }
-                    #             source_protocols["sourcePorts"]["literals"].append(
-                    #                 src_protocol_dict
-                    #             )
-                    #             policy_obj.update(source_protocols)
-                    #     except Exception:
-                    #         pass
                     if protocol and protocol != "icmp" and protocol and protocol != "ip":
                         protocol_number = protocol_map.get(protocol)
                         if protocol:
@@ -1031,7 +1005,9 @@ def create_access_rules(data):
                         policy_obj.update(logging_policy)
                     # ############################# COLLECTING SOURCE PORTS ####################################
                 protocol = el.get("protocol")
-                if protocol and protocol not in typical_protocol_list:
+                el_src_port = el.get('sourcePorts')
+                el_dst_port = el.get('destinationPorts')
+                if protocol and protocol not in typical_protocol_list and el_src_port is None and el_dst_port is None:
                     if protocol.isdigit():
                         pass
                     else:
@@ -1380,24 +1356,8 @@ def create_access_rules(data):
                                         if objct == so.get("name"):
                                             src_obj_is_duplicate = True
                                     if not src_obj_is_duplicate:
-                                        try:
-                                            src_net_id = fmc.object.host.get(
-                                                name=objct
-                                            )["id"]
-                                            src_net_data = {
-                                                "type": "Host",
-                                                "name": objct,
-                                                "id": src_net_id,
-                                            }
-                                        except Exception:
-                                            src_net_id = fmc.object.network.get(
-                                                name=objct
-                                            )["id"]
-                                            src_net_data = {
-                                                "type": "Network",
-                                                "name": objct,
-                                                "id": src_net_id,
-                                            }
+                                        src_net_obj = FMCobject(name=objct)
+                                        src_net_data = src_net_obj.get_object_json()
                                         source_networks_obj["objects"].append(
                                             src_net_data
                                         )
@@ -1436,25 +1396,9 @@ def create_access_rules(data):
                                 for so in source_networks_obj["objects"]:
                                     if source_net == so.get("name"):
                                         src_obj_is_duplicate = True
-                                if not src_obj_is_duplicate and source_net != "any":
-                                    try:
-                                        src_net_id = fmc.object.host.get(
-                                            name=source_net
-                                        )["id"]
-                                        src_net_data = {
-                                            "type": "Host",
-                                            "name": source_net,
-                                            "id": src_net_id,
-                                        }
-                                    except Exception as exp:
-                                        src_net_id = fmc.object.network.get(
-                                            name=source_net
-                                        )["id"]
-                                        src_net_data = {
-                                            "type": "Network",
-                                            "name": source_net,
-                                            "id": src_net_id,
-                                        }
+                                if not src_obj_is_duplicate:  # and source_net != "any":
+                                    src_net_obj = FMCobject(name=source_net)
+                                    src_net_data = src_net_obj.get_object_json()
                                     source_networks_obj["objects"].append(
                                         src_net_data
                                     )
@@ -1695,18 +1639,18 @@ intf_data = {
 
 if action == "create_all":
     # Create All
-    # create_host_objects(json_data)
-    # create_network_objects(json_data)
-    # create_group_network_objects(json_data)
-    # create_port_objects(json_data)
-    # create_security_zones(json_data)
+    create_host_objects(json_data)
+    create_network_objects(json_data)
+    create_group_network_objects(json_data)
+    create_port_objects(json_data)
+    create_security_zones(json_data)
     create_access_policy(json_data)
     create_access_rules(json_data)
     nat_policy = FMCobject(name="RNAT")
-    # nat_policy.create_nat_policy()
-    # nat_auto_rules("create_auto_nat", "RNAT", source_data=json_data)
-    # nat_manual_rules(nat_type="source-nat", nat_policy_name="RNAT", source_data=json_data)
-    # nat_manual_rules(nat_type="after-auto-nat", nat_policy_name="RNAT", source_data=json_data)
+    nat_policy.create_nat_policy()
+    nat_auto_rules("create_auto_nat", "RNAT", source_data=json_data)
+    nat_manual_rules(nat_type="source-nat", nat_policy_name="RNAT", source_data=json_data)
+    nat_manual_rules(nat_type="after-auto-nat", nat_policy_name="RNAT", source_data=json_data)
 
 if action == "delete_all":
     # Delete All
