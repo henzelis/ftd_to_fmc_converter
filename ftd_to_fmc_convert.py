@@ -14,7 +14,7 @@ colorama.just_fix_windows_console()
 
 action = "create_all"
 # action = "delete_all"
-update_config_parse = False
+update_config_parse = True
 debug = False
 
 if os.path.exists("result.json") and not update_config_parse:
