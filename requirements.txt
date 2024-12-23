@@ -4,3 +4,5 @@ requests
 xmltodict~=0.13.0
 colorama~=0.4.6
 tqdm
+pandas
+openpyxl
